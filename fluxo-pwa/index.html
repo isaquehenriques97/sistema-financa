@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- ── PWA & Mobile ─────────────────────────────────────── -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#00e5a0" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Fluxo" />
+  <meta name="description" content="Controle financeiro pessoal simples e poderoso" />
+
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Ícones iOS (fallback SVG inline via data URI) -->
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <title>Fluxo — Controle Financeiro</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===================== MOBILE HEADER ===================== -->
+    <header class="mobile-header">
+      <div class="header-brand">
+        <span class="brand-icon">◈</span>
+        <span class="brand-name">Fluxo</span>
+      </div>
+      <div class="header-right">
+        <div class="current-month" id="currentMonthDisplay"></div>
+        <button class="header-settings-btn" onclick="navigateTo('settings')" aria-label="Configurações">
+          <span>⚙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ===================== MAIN CONTENT ===================== -->
+    <main class="main-content">
+
+      <!-- ---- DASHBOARD ---- -->
+      <section class="section active" id="section-dashboard">
+        <div class="section-header">
+          <h1>Dashboard</h1>
+          <p class="section-subtitle">Visão geral das suas finanças</p>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="card card-balance">
+            <div class="card-label">Saldo Total Acumulado</div>
+            <div class="card-value balance-value" id="dashBalance">R$ 0,00</div>
+          </div>
+          <div class="card card-stat income-stat">
+            <div class="card-label">Receitas do Mês</div>
+            <div class="card-value" id="dashIncome">R$ 0,00</div>
+          </div>
+          <div class="card card-stat expense-stat">
+            <div class="card-label">Despesas do Mês</div>
+            <div class="card-value" id="dashExpenses">R$ 0,00</div>
+          </div>
+          <div class="card card-stat savings-stat">
+            <div class="card-label">Economia Líquida</div>
+            <div class="card-value" id="dashSavings">R$ 0,00</div>
+          </div>
+        </div>
+
+        <div class="card reserve-card">
+          <div class="reserve-header">
+            <div>
+              <div class="card-label">Reserva de Emergência</div>
+              <div class="reserve-amounts">
+                <span id="reserveCurrent">R$ 0,00</span>
+                <span class="reserve-separator">/</span>
+                <span id="reserveGoal">R$ 0,00</span>
+              </div>
+            </div>
+            <div class="reserve-percent" id="reservePercent">0%</div>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="reserveProgress" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <button class="action-btn income-btn" onclick="navigateTo('incomes')">
+            <span>＋</span> Adicionar Receita
+          </button>
+          <button class="action-btn expense-btn" onclick="navigateTo('expenses')">
+            <span>＋</span> Adicionar Despesa
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Transações Recentes</div>
+          <div class="transactions-list" id="recentTransactions"></div>
+        </div>
+      </section>
+
+      <!-- ---- INCOMES ---- -->
+      <section class="section" id="section-incomes">
+        <div class="section-header">
+          <h1>Receitas</h1>
+          <p class="section-subtitle">Controle suas fontes de renda</p>
+        </div>
+
+        <!-- Tabs: Novo | Histórico -->
+        <div class="tab-switcher" id="incomeTabSwitcher">
+          <button class="tab-sw-btn active" data-tab="form" onclick="switchInnerTab('incomes','form')">Nova Receita</button>
+          <button class="tab-sw-btn" data-tab="list" onclick="switchInnerTab('incomes','list')">Histórico</button>
+        </div>
+
+        <div class="inner-tab active" id="incomeTab-form">
+          <div class="card form-card">
+            <form id="incomeForm" class="finance-form">
+              <div class="form-group">
+                <label>Valor (R$)</label>
+                <input type="number" id="incomeAmount" placeholder="0,00" step="0.01" min="0" inputmode="decimal" required />
+              </div>
+              <div class="form-group">
+                <label>Fonte</label>
+                <select id="incomeSource">
+                  <option value="Salário">Salário</option>
+                  <option value="Negócio Próprio">Negócio Próprio</option>
+                  <option value="Freela / Bico">Freela / Bico</option>
+                  <option value="Investimentos">Investimentos</option>
+                  <option value="Aluguel">Aluguel</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="incomeDate" required />
+              </div>
+              <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="incomeDesc" placeholder="Detalhes opcionais..." />
+              </div>
+              <button type="submit" class="submit-btn income-submit">Adicionar Receita</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="inner-tab" id="incomeTab-list">
+          <div class="card list-card">
+            <div class="filter-bar">
+              <select id="incomeMonthFilter"></select>
+            </div>
+            <div class="finance-list" id="incomeList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- EXPENSES ---- -->
+      <section class="section" id="section-expenses">
+        <div class="section-header">
+          <h1>Despesas</h1>
+          <p class="section-subtitle">Monitore cada centavo dos seus gastos</p>
+        </div>
+
+        <div class="tab-switcher" id="expenseTabSwitcher">
+          <button class="tab-sw-btn active" data-tab="form" onclick="switchInnerTab('expenses','form')">Nova Despesa</button>
+          <button class="tab-sw-btn" data-tab="list" onclick="switchInnerTab('expenses','list')">Histórico</button>
+        </div>
+
+        <div class="inner-tab active" id="expenseTab-form">
+          <div class="card form-card">
+            <form id="expenseForm" class="finance-form">
+              <div class="form-group">
+                <label>Valor (R$)</label>
+                <input type="number" id="expenseAmount" placeholder="0,00" step="0.01" min="0" inputmode="decimal" required />
+              </div>
+              <div class="form-group">
+                <label>Tipo</label>
+                <select id="expenseType">
+                  <option value="Variável">Variável</option>
+                  <option value="Fixo">Fixo (recorrente todo mês)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Categoria</label>
+                <select id="expenseCategory">
+                  <option value="Moradia">Moradia (aluguel, condomínio)</option>
+                  <option value="Alimentação">Alimentação</option>
+                  <option value="Transporte">Transporte</option>
+                  <option value="Saúde">Saúde</option>
+                  <option value="Educação">Educação</option>
+                  <option value="Lazer">Lazer</option>
+                  <option value="Vestuário">Vestuário</option>
+                  <option value="Assinaturas">Assinaturas / Serviços</option>
+                  <option value="Imprevisto">Imprevisto</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Forma de Pagamento</label>
+                <select id="expensePayment">
+                  <option value="Nubank">Nubank</option>
+                  <option value="Neon">Neon</option>
+                  <option value="Outro Cartão">Outro Cartão</option>
+                  <option value="PIX">PIX</option>
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Débito">Débito</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="expenseDate" required />
+              </div>
+              <div class="form-group">
+                <label>Descrição</label>
+                <input type="text" id="expenseDesc" placeholder="Detalhes opcionais..." />
+              </div>
+              <button type="submit" class="submit-btn expense-submit">Adicionar Despesa</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="inner-tab" id="expenseTab-list">
+          <div class="card list-card">
+            <div class="filter-bar">
+              <select id="expenseMonthFilter"></select>
+            </div>
+            <div class="finance-list" id="expenseList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- REPORTS ---- -->
+      <section class="section" id="section-reports">
+        <div class="section-header">
+          <h1>Relatórios</h1>
+          <p class="section-subtitle">Análise detalhada das suas finanças</p>
+        </div>
+        <div class="filter-bar top-filter">
+          <label>Período:</label>
+          <select id="reportMonthFilter"></select>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Resumo do Período</div>
+          <div class="report-summary" id="reportSummary"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Distribuição de Despesas</div>
+          <canvas id="expensePieChart" width="280" height="280"></canvas>
+          <div class="chart-legend" id="chartLegend"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Gastos por Forma de Pagamento</div>
+          <div class="card-breakdown" id="cardBreakdown"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Fixo vs Variável</div>
+          <div id="fixedVarBreakdown"></div>
+        </div>
+
+        <div class="card export-card">
+          <div class="card-title">Exportar Dados</div>
+          <p class="export-desc">Baixe seus dados para analisar em Excel ou Sheets.</p>
+          <div class="export-actions">
+            <button class="export-btn income-export" onclick="exportCSV('incomes')">
+              <span class="export-icon">↑</span>
+              <div>
+                <div class="export-btn-title">Receitas</div>
+                <div class="export-btn-sub">CSV</div>
+              </div>
+            </button>
+            <button class="export-btn expense-export" onclick="exportCSV('expenses')">
+              <span class="export-icon">↓</span>
+              <div>
+                <div class="export-btn-title">Despesas</div>
+                <div class="export-btn-sub">CSV</div>
+              </div>
+            </button>
+            <button class="export-btn full-export" onclick="exportCSV('all')">
+              <span class="export-icon">◈</span>
+              <div>
+                <div class="export-btn-title">Tudo</div>
+                <div class="export-btn-sub">CSV</div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---- GOALS ---- -->
+      <section class="section" id="section-goals">
+        <div class="section-header">
+          <h1>Metas</h1>
+          <p class="section-subtitle">Planeje seu futuro financeiro</p>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Reserva de Emergência</div>
+          <form id="reserveForm" class="finance-form">
+            <div class="form-group">
+              <label>Meta da Reserva (R$)</label>
+              <input type="number" id="reserveGoalInput" placeholder="Ex: 15000" step="100" min="0" inputmode="decimal" />
+            </div>
+            <div class="form-group">
+              <label>Valor Atual Guardado (R$)</label>
+              <input type="number" id="reserveCurrentInput" placeholder="Ex: 5000" step="100" min="0" inputmode="decimal" />
+            </div>
+            <button type="submit" class="submit-btn income-submit">Salvar Reserva</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Anotações e Planos</div>
+          <div class="form-group">
+            <label>Planos de Investimento e Objetivos Futuros</label>
+            <textarea id="investmentNotes" rows="5"
+              placeholder="Ex: FIIs — 20% da renda&#10;Ações — 10% da renda&#10;Viagem para Europa — R$ 8.000"></textarea>
+          </div>
+          <button class="submit-btn income-submit" style="margin-top:12px;width:100%" onclick="saveNotes()">Salvar Anotações</button>
+        </div>
+
+        <div class="card goals-list-card">
+          <div class="card-title">Objetivos Financeiros</div>
+          <form id="goalItemForm" class="finance-form" style="margin-bottom:24px">
+            <div class="form-group">
+              <label>Nome da Meta</label>
+              <input type="text" id="goalTitle" placeholder="Ex: Viagem, Carro..." required />
+            </div>
+            <div class="form-row-2">
+              <div class="form-group">
+                <label>Valor Alvo (R$)</label>
+                <input type="number" id="goalTarget" placeholder="Ex: 8000" min="0" inputmode="decimal" required />
+              </div>
+              <div class="form-group">
+                <label>Valor Inicial (R$)</label>
+                <input type="number" id="goalCurrent" placeholder="0" min="0" inputmode="decimal" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Tipo de Aporte Mensal</label>
+              <select id="goalContribType" onchange="toggleContribInput()">
+                <option value="none">Sem aporte definido</option>
+                <option value="fixed">Valor fixo (R$)</option>
+                <option value="percent">% da renda mensal</option>
+              </select>
+            </div>
+            <div class="form-group" id="contribValueGroup" style="display:none">
+              <label id="contribValueLabel">Valor do Aporte</label>
+              <input type="number" id="goalContribValue" placeholder="0" min="0" step="0.01" inputmode="decimal" />
+            </div>
+            <button type="submit" class="submit-btn income-submit">＋ Adicionar Meta</button>
+          </form>
+          <div class="goals-list" id="goalsList"></div>
+        </div>
+      </section>
+
+      <!-- ---- SETTINGS ---- -->
+      <section class="section" id="section-settings">
+        <div class="section-header">
+          <h1>Configurações</h1>
+          <p class="section-subtitle">Integrações e preferências</p>
+        </div>
+
+        <!-- Instalar como app -->
+        <div class="card" id="installCard" style="display:none">
+          <div class="card-title">Instalar no Celular</div>
+          <p class="settings-desc">Adicione o Fluxo à sua tela inicial para usar como um app nativo, mesmo sem internet.</p>
+          <button class="submit-btn income-submit" id="installBtn" style="width:100%">
+            📲 Instalar o Fluxo
+          </button>
+        </div>
+
+        <!-- Supabase -->
+        <div class="card">
+          <div class="card-title">Supabase — Sincronização em Nuvem</div>
+          <p class="settings-desc">
+            Conecte ao seu projeto Supabase para salvar na nuvem e acessar de qualquer dispositivo.
+          </p>
+          <div class="supabase-status" id="supabaseStatus">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="statusText">Não conectado</span>
+          </div>
+          <form id="supabaseForm" class="finance-form settings-form">
+            <div class="form-group">
+              <label>URL do Projeto</label>
+              <input type="url" id="sbUrl" placeholder="https://xxxxx.supabase.co" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label>Chave Anon (public)</label>
+              <input type="password" id="sbKey" placeholder="eyJhbGciOiJIUzI1NiIs..." autocomplete="off" />
+            </div>
+            <div class="settings-actions">
+              <button type="button" class="submit-btn income-submit" onclick="connectSupabase()">Testar Conexão</button>
+              <button type="button" class="submit-btn" style="background:var(--bg-4);color:var(--text-0);border:1px solid var(--border-hi)" onclick="syncToSupabase()">↑ Enviar para Supabase</button>
+              <button type="button" class="submit-btn" style="background:var(--bg-4);color:var(--text-0);border:1px solid var(--border-hi)" onclick="syncFromSupabase()">↓ Importar do Supabase</button>
+            </div>
+          </form>
+          <div class="settings-hint">
+            <strong>Como configurar:</strong> crie um projeto gratuito em
+            <a href="https://supabase.com" target="_blank" rel="noopener">supabase.com</a>,
+            vá em Project Settings → API e copie a URL e a chave <em>anon public</em>.
+          </div>
+        </div>
+
+        <!-- Exportar CSV -->
+        <div class="card export-card">
+          <div class="card-title">Exportar Dados (CSV)</div>
+          <p class="export-desc">Baixe seus dados para analisar em Excel ou Sheets.</p>
+          <div class="export-actions">
+            <button class="export-btn income-export" onclick="exportCSV('incomes')">
+              <span class="export-icon">↑</span>
+              <div>
+                <div class="export-btn-title">Receitas</div>
+                <div class="export-btn-sub">CSV</div>
+              </div>
+            </button>
+            <button class="export-btn expense-export" onclick="exportCSV('expenses')">
+              <span class="export-icon">↓</span>
+              <div>
+                <div class="export-btn-title">Despesas</div>
+                <div class="export-btn-sub">CSV</div>
+              </div>
+            </button>
+            <button class="export-btn full-export" onclick="exportCSV('all')">
+              <span class="export-icon">◈</span>
+              <div>
+                <div class="export-btn-title">Tudo</div>
+                <div class="export-btn-sub">CSV</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="card danger-card">
+          <div class="card-title">Zona de Perigo</div>
+          <p class="settings-desc">Estas ações são irreversíveis. Faça um backup (CSV) antes.</p>
+          <button class="submit-btn" style="background:var(--danger-dim);color:var(--danger);border:1px solid rgba(255,75,110,0.25);width:100%" onclick="clearAllData()">
+            Apagar todos os dados locais
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ===================== MODAL DE APORTE ===================== -->
+    <div class="modal-overlay" id="contribModal" onclick="closeContribModal(event)">
+      <div class="modal-box">
+        <div class="modal-header">
+          <span class="modal-title" id="modalGoalTitle">Atualizar Meta</span>
+          <button class="modal-close" onclick="closeContribModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-progress-wrap">
+            <div class="modal-amounts">
+              <span id="modalCurrent">R$ 0,00</span>
+              <span style="color:var(--text-2)">/</span>
+              <span id="modalTarget">R$ 0,00</span>
+              <span class="goal-pct" id="modalPct">0%</span>
+            </div>
+            <div class="progress-bar" style="margin-top:10px">
+              <div class="progress-fill" id="modalProgress" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <div class="modal-block">
+              <label class="modal-label">Adicionar ao saldo atual (R$)</label>
+              <div class="modal-input-row">
+                <input type="number" id="modalAddAmount" placeholder="Ex: 500" min="0" step="0.01" inputmode="decimal" />
+                <button class="submit-btn income-submit" onclick="applyContrib('add')">＋</button>
+              </div>
+              <div class="modal-hint" id="modalContribHint"></div>
+            </div>
+
+            <div class="modal-divider"><span>ou</span></div>
+
+            <div class="modal-block">
+              <label class="modal-label">Definir saldo total (R$)</label>
+              <div class="modal-input-row">
+                <input type="number" id="modalSetAmount" placeholder="Ex: 3200" min="0" step="0.01" inputmode="decimal" />
+                <button class="submit-btn" style="background:var(--bg-4);color:var(--text-0);border:1px solid var(--border-hi)" onclick="applyContrib('set')">✓</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== BOTTOM NAV ===================== -->
+    <nav class="bottom-nav">
+      <button class="bnav-item active" data-section="dashboard">
+        <span class="bnav-icon">⬡</span>
+        <span class="bnav-label">Início</span>
+      </button>
+      <button class="bnav-item" data-section="incomes">
+        <span class="bnav-icon">↑</span>
+        <span class="bnav-label">Receitas</span>
+      </button>
+      <button class="bnav-item" data-section="expenses">
+        <span class="bnav-icon">↓</span>
+        <span class="bnav-label">Despesas</span>
+      </button>
+      <button class="bnav-item" data-section="reports">
+        <span class="bnav-icon">◎</span>
+        <span class="bnav-label">Relatórios</span>
+      </button>
+      <button class="bnav-item" data-section="goals">
+        <span class="bnav-icon">◇</span>
+        <span class="bnav-label">Metas</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- Toast de notificação -->
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
